@@ -1,3 +1,4 @@
+import { EventHookWithCallback } from "@/interfaces/event-hook-metadata";
 import { ExtractedMetadata } from "@/interfaces/metadata-extractor";
 import { parseQueueName } from "@/utils/parse-queue-name";
 import { Injectable } from "@nestjs/common";
@@ -22,12 +23,18 @@ export class MetadataExtractor {
     const methodNames = this.metadataScanner.getAllMethodNames(prototype);
 
     const extractedMetadata: ExtractedMetadata[] = [];
+    const eventHookMetadata: EventHookWithCallback[] = [];
 
     methodNames.forEach(methodName => {
       const callback = instance[methodName];
 
       const expression = this.metadataAccessor.getExpression(callback);
-      const options = this.metadataAccessor.getOptions(callback) ?? {};
+      const options = this.metadataAccessor.getOptions(callback) || {};
+      const eventHook = this.metadataAccessor.getEventHook(callback);
+
+      if (eventHook) {
+        eventHookMetadata.push({ event: eventHook.event, callback });
+      }
 
       if (!expression) return;
 
@@ -36,7 +43,8 @@ export class MetadataExtractor {
         options,
         methodName,
         className: instanceWrapper.name,
-        queueName: parseQueueName(options.queueName ?? instanceWrapper.name),
+        queueName: parseQueueName(options.queueName || instanceWrapper.name),
+        hooks: eventHookMetadata,
         callback,
       });
     });

@@ -33,14 +33,12 @@ export class ScheduleExplorer implements OnModuleInit {
     if (!metadataExtracted.length) this.logger.log("No schedule found");
 
     for (const metadata of metadataExtracted) {
-      const { expression, callback } = metadata;
-
-      await this.scheduleService.schedule(expression, {
+      await this.scheduleService.schedule(metadata.expression, {
         name: metadata.methodName,
         queueName: metadata.queueName,
       });
 
-      await this.scheduleService.process(metadata.queueName, callback);
+      await this.scheduleService.process(metadata);
     }
   }
 }

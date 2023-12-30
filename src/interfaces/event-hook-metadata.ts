@@ -1,6 +1,10 @@
 import { WorkerListener } from "bullmq";
+import { ScheduleCallback } from "./schedule-options";
 
 export type EventHookMetadata = {
   event: keyof WorkerListener;
-  queueName?: string;
+};
+
+export type EventHookWithCallback = EventHookMetadata & {
+  callback: ScheduleCallback;
 };

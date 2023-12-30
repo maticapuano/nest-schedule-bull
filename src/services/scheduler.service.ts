@@ -1,5 +1,6 @@
 import { CRON_MODULE_REDIS_OPTIONS } from "@/constants/metadata";
-import { ScheduleCallback, ScheduleOptions } from "@/interfaces/schedule-options";
+import { ExtractedMetadata } from "@/interfaces/metadata-extractor";
+import { ScheduleOptions } from "@/interfaces/schedule-options";
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { ConnectionOptions, Job, Queue, Worker } from "bullmq";
 
@@ -41,10 +42,10 @@ export class ScheduleService {
 
   /**
    * Process a job from a queue
-   * @param callback ScheduleCallback
-   * @param queueName string
+   * @param metadata ExtractedMetadata
    */
-  public async process(queueName: string, callback: ScheduleCallback): Promise<void> {
+  public async process(metadata: ExtractedMetadata): Promise<void> {
+    const { queueName, hooks, callback } = metadata;
     const options = {
       connection: this.redisOptions,
       removeOnComplete: {
@@ -54,6 +55,10 @@ export class ScheduleService {
 
     const workerProcess = async (job: Job): Promise<void> => callback(job);
 
-    new Worker(queueName, workerProcess, options);
+    const worker = new Worker(queueName, workerProcess, options);
+
+    hooks.forEach(({ event, callback }) => {
+      worker.on(event, (job: Job) => callback(job));
+    });
   }
 }
