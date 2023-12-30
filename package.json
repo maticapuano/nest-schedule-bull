@@ -14,9 +14,12 @@
     "dist"
   ],
   "private": false,
-  "scripts": {},
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
   "dependencies": {
-    "bullmq": "^5.1.0"
+    "bullmq": "^5.1.0",
+    "cron-parser": "^4.9.0"
   },
   "devDependencies": {
     "@nestjs/common": "^10.3.0",
