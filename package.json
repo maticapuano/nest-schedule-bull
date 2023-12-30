@@ -1,6 +1,6 @@
 {
   "name": "nest-schedule-bull",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "dist/index.js",
   "repository": "git@github.com:maticapuano/nest-schedule-bull.git",
   "description": "A NestJS module for scheduling Bull jobs using cron expressions",
@@ -13,9 +13,16 @@
   "files": [
     "dist"
   ],
+  "keywords": [
+    "nestjs",
+    "bull",
+    "schedule",
+    "cron",
+    "redis"
+  ],
   "private": false,
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json && tsc-alias"
   },
   "dependencies": {
     "bullmq": "^5.1.0",
@@ -34,6 +41,7 @@
     "reflect-metadata": "^0.2.1",
     "rxjs": "^7.8.1",
     "ts-node": "^10.9.2",
+    "tsc-alias": "^1.8.8",
     "typescript": "^5.3.3"
   },
   "peerDependencies": {
