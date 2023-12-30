@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
-import { DiscoveryService, MetadataScanner } from "@nestjs/core";
+import { DiscoveryService } from "@nestjs/core";
 import { InstanceWrapper } from "@nestjs/core/injector/instance-wrapper";
-import { MetadataAccessor } from "./metadata-accessor.service";
+import { MetadataExtractor } from "./metadata-extractor.service";
 import { ScheduleService } from "./scheduler.service";
 
 @Injectable()
@@ -9,10 +9,9 @@ export class ScheduleExplorer implements OnModuleInit {
   private logger = new Logger(ScheduleExplorer.name);
 
   public constructor(
-    private metadataAccessor: MetadataAccessor,
-    private metadataScanner: MetadataScanner,
     private discoveryService: DiscoveryService,
     private scheduleService: ScheduleService,
+    private metadataExtractor: MetadataExtractor,
   ) {}
 
   public async onModuleInit(): Promise<void> {
@@ -29,34 +28,19 @@ export class ScheduleExplorer implements OnModuleInit {
       ...this.discoveryService.getProviders(),
     ];
 
-    instanceWrappers.forEach((wrapper: InstanceWrapper) => {
-      const { instance } = wrapper;
+    const metadataExtracted = this.metadataExtractor.extractAll(instanceWrappers);
 
-      if (!instance || !Object.getPrototypeOf(instance)) return;
+    if (!metadataExtracted.length) this.logger.log("No schedule found");
 
-      const prototype = Object.getPrototypeOf(instance);
+    for (const metadata of metadataExtracted) {
+      const { expression, callback } = metadata;
 
-      const methodNames = this.metadataScanner.getAllMethodNames(prototype);
-
-      methodNames.forEach((methodName: string) => {
-        const callback = instance[methodName];
-
-        const expression = this.metadataAccessor.getExpression(callback);
-        const options = this.metadataAccessor.getOptions(callback);
-
-        if (!expression) return;
-
-        this.logger.log(
-          `Scheduling for ${prototype.constructor.name}.${methodName}`,
-        );
-
-        const queueName = options?.queueName ?? prototype.constructor.name;
-
-        this.scheduleService.addSchedule(expression, callback.bind(instance), {
-          name: methodName,
-          queueName,
-        });
+      await this.scheduleService.schedule(expression, {
+        name: metadata.methodName,
+        queueName: metadata.queueName,
       });
-    });
+
+      await this.scheduleService.process(metadata.queueName, callback);
+    }
   }
 }

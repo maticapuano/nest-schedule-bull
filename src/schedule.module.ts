@@ -4,11 +4,12 @@ import { ConnectionOptions } from "bullmq";
 import { CRON_MODULE_REDIS_OPTIONS } from "./constants/metadata";
 import { ScheduleExplorer } from "./services/explorer.service";
 import { MetadataAccessor } from "./services/metadata-accessor.service";
+import { MetadataExtractor } from "./services/metadata-extractor.service";
 import { ScheduleService } from "./services/scheduler.service";
 
 @Module({
   imports: [DiscoveryModule],
-  providers: [MetadataAccessor, ScheduleService],
+  providers: [MetadataAccessor, ScheduleService, MetadataExtractor],
 })
 export class ScheduleBullModule {
   public static forRoot(options: ConnectionOptions): DynamicModule {
