@@ -1,0 +1,3 @@
+export const CRON_EXPRESSION = Symbol("CRON_EXPRESSION");
+export const CRON_OPTIONS = Symbol("CRON_OPTIONS");
+export const CRON_MODULE_REDIS_OPTIONS = Symbol("CRON_MODULE_REDIS_OPTIONS");
