@@ -6,4 +6,4 @@ export type ScheduleOptions = {
   timeZone?: string;
 };
 
-export type ScheduleCallback = <T>(job: Job<T>) => void;
+export type ScheduleCallback = <T>(job: Job<T>, ...args: unknown[]) => void;

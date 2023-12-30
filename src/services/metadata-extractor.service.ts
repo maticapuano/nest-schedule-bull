@@ -33,7 +33,10 @@ export class MetadataExtractor {
       const eventHook = this.metadataAccessor.getEventHook(callback);
 
       if (eventHook) {
-        eventHookMetadata.push({ event: eventHook.event, callback });
+        eventHookMetadata.push({
+          event: eventHook.event,
+          callback: callback.bind(instance),
+        });
       }
 
       if (!expression) return;
@@ -45,7 +48,7 @@ export class MetadataExtractor {
         className: instanceWrapper.name,
         queueName: parseQueueName(options.queueName || instanceWrapper.name),
         hooks: eventHookMetadata,
-        callback,
+        callback: callback.bind(instance),
       });
     });
 

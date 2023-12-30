@@ -58,7 +58,7 @@ export class ScheduleService {
     const worker = new Worker(queueName, workerProcess, options);
 
     hooks.forEach(({ event, callback }) => {
-      worker.on(event, (job: Job) => callback(job));
+      worker.on(event, (job: Job, ...args: unknown[]) => callback(job, ...args));
     });
   }
 }
