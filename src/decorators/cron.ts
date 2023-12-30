@@ -1,5 +1,4 @@
 import { CRON_EXPRESSION, CRON_OPTIONS } from "@/constants/metadata";
-import { CronExpression } from "@/interfaces/cron-expression";
 import { CronOptions } from "@/interfaces/cron-options";
 import { SetMetadata, applyDecorators } from "@nestjs/common";
 
@@ -8,13 +7,10 @@ import { SetMetadata, applyDecorators } from "@nestjs/common";
  * @param expression string or enum `CronExpression`
  * @param options CronOptions
  */
-export function Cron(expression: CronExpression): MethodDecorator;
+export function Cron(expression: string): MethodDecorator;
+export function Cron(expression: string, options: CronOptions): MethodDecorator;
 export function Cron(
-  expression: CronExpression,
-  options: CronOptions,
-): MethodDecorator;
-export function Cron(
-  expression: CronExpression,
+  expression: string,
   options?: CronOptions,
 ): MethodDecorator {
   const { ...opts } = options || {};
