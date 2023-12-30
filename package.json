@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "dist/index.js",
   "repository": "git@github.com:maticapuano/nest-schedule-bull.git",
+  "description": "A NestJS module for scheduling Bull jobs using cron expressions",
   "bugs": {
     "url": "https://github.com/maticapuano/nest-schedule-bull/issues"
   },
