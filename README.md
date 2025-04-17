@@ -32,8 +32,10 @@ import { ScheduleBullModule } from "nest-schedule-bull";
 @Module({
   imports: [
     ScheduleBullModule.forRoot({
-      host: "localhost",
-      port: 6379,
+      connection: {
+        url: "redis://localhost:6379",
+      },
+      queueName: "crons", // Optional
     }),
   ],
 })

@@ -1,16 +1,14 @@
 import { DynamicModule, Module } from "@nestjs/common";
 import { DiscoveryModule } from "@nestjs/core";
-import { ConnectionOptions } from "bullmq";
 import { CRON_MODULE_REDIS_OPTIONS } from "./constants/metadata";
 import { ScheduleExplorer } from "./services/explorer.service";
 import { MetadataAccessor } from "./services/metadata-accessor.service";
 import { MetadataExtractor } from "./services/metadata-extractor.service";
 import { ScheduleService } from "./services/scheduler.service";
-
-export interface ScheduleBullModuleOptions {
-  queueName?: string;
-  connection?: ConnectionOptions;
-}
+import {
+  ScheduleBullModuleOptions,
+  ScheduleBullModuleAsyncOptions,
+} from "./interfaces/module-options";
 
 @Module({
   imports: [DiscoveryModule],
@@ -26,6 +24,23 @@ export class ScheduleBullModule {
         {
           provide: CRON_MODULE_REDIS_OPTIONS,
           useValue: options ?? {},
+        },
+      ],
+      exports: [],
+    };
+  }
+
+  public static forRootAsync(options: ScheduleBullModuleAsyncOptions): DynamicModule {
+    return {
+      global: true,
+      module: ScheduleBullModule,
+      imports: options.imports || [],
+      providers: [
+        ScheduleExplorer,
+        {
+          provide: CRON_MODULE_REDIS_OPTIONS,
+          useFactory: options.useFactory,
+          inject: options.inject || [],
         },
       ],
       exports: [],
