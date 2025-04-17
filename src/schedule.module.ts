@@ -7,12 +7,17 @@ import { MetadataAccessor } from "./services/metadata-accessor.service";
 import { MetadataExtractor } from "./services/metadata-extractor.service";
 import { ScheduleService } from "./services/scheduler.service";
 
+export interface ScheduleBullModuleOptions {
+  queueName?: string;
+  connection?: ConnectionOptions;
+}
+
 @Module({
   imports: [DiscoveryModule],
   providers: [MetadataAccessor, ScheduleService, MetadataExtractor],
 })
 export class ScheduleBullModule {
-  public static forRoot(options: ConnectionOptions): DynamicModule {
+  public static forRoot(options: ScheduleBullModuleOptions): DynamicModule {
     return {
       global: true,
       module: ScheduleBullModule,

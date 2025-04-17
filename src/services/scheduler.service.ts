@@ -23,10 +23,10 @@ export class ScheduleService {
       defaultJobOptions: {},
     });
 
-    const repeatableJobs = await queue.getRepeatableJobs();
+    const repeatableJobs = await queue.getJobSchedulers();
 
     for (const repeatableJob of repeatableJobs) {
-      await queue.removeRepeatableByKey(repeatableJob.key);
+      await queue.removeJobScheduler(repeatableJob.key);
     }
 
     await queue.add(options.name, undefined, {
