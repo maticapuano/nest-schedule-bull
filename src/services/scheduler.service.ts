@@ -28,7 +28,6 @@ export class ScheduleService {
 
     await Promise.all(repeatableJobs.map(job => queue.removeJobScheduler(job.key)));
 
-    console.log(options);
     await queue.add(options.name, undefined, {
       repeat: {
         pattern: expression,
