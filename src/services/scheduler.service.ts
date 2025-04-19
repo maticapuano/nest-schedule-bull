@@ -1,38 +1,36 @@
 import { CRON_MODULE_REDIS_OPTIONS } from "@/constants/metadata";
 import { ExtractedMetadata } from "@/interfaces/metadata-extractor";
+import { ScheduleBullModuleOptions } from "@/interfaces/module-options";
 import { ScheduleOptions } from "@/interfaces/schedule-options";
 import { Inject, Injectable, Logger } from "@nestjs/common";
-import { ConnectionOptions, Job, Queue, Worker } from "bullmq";
+import { ConnectionOptions, Job, Queue, Worker, WorkerOptions } from "bullmq";
 
 @Injectable()
 export class ScheduleService {
   private logger = new Logger(ScheduleService.name);
 
   public constructor(
-    @Inject(CRON_MODULE_REDIS_OPTIONS) private redisOptions: ConnectionOptions,
+    @Inject(CRON_MODULE_REDIS_OPTIONS) private redisOptions: ScheduleBullModuleOptions,
   ) {}
 
-  /**
-   * Schedule a job.
-   * @param expression string or enum `CronExpression`
-   * @param options ScheduleOptions
-   */
   public async schedule(expression: string, options: ScheduleOptions): Promise<void> {
-    const queue = new Queue(options.queueName, {
-      connection: this.redisOptions,
+    const queueName = this.redisOptions.connection
+      ? `${this.redisOptions.queueName}-${options.queueName}`
+      : options.queueName;
+
+    const queue = new Queue(queueName, {
+      connection: this.redisOptions.connection as ConnectionOptions,
       defaultJobOptions: {},
     });
 
     const repeatableJobs = await queue.getJobSchedulers();
 
-    for (const repeatableJob of repeatableJobs) {
-      await queue.removeJobScheduler(repeatableJob.key);
-    }
+    await Promise.all(repeatableJobs.map(job => queue.removeJobScheduler(job.key)));
 
     await queue.add(options.name, undefined, {
       repeat: {
         pattern: expression,
-        ...(options.timeZone && { tz: options.timeZone }),
+        ...(options.timezone && { tz: options.timezone }),
       },
       removeOnComplete: true,
     });
@@ -40,14 +38,11 @@ export class ScheduleService {
     this.logger.log(`Job scheduled: ${options.queueName}.${options.name}`);
   }
 
-  /**
-   * Process a job from a queue
-   * @param metadata ExtractedMetadata
-   */
   public async process(metadata: ExtractedMetadata): Promise<void> {
     const { queueName, hooks, callback } = metadata;
-    const options = {
-      connection: this.redisOptions,
+
+    const options: WorkerOptions = {
+      connection: this.redisOptions.connection as ConnectionOptions,
       removeOnComplete: {
         count: 1,
       },
@@ -57,8 +52,16 @@ export class ScheduleService {
 
     const worker = new Worker(queueName, workerProcess, options);
 
-    hooks.forEach(({ event, callback }) => {
-      worker.on(event, (job: Job, ...args: unknown[]) => callback(job, ...args));
-    });
+    for (const { event, callback } of hooks) {
+      worker.on(event, async (job: Job, ...args: unknown[]) => {
+        try {
+          await callback(job, ...args);
+        } catch (error) {
+          this.logger.error(
+            `Error in ${event} hook for job ${job.id}: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
+      });
+    }
   }
 }

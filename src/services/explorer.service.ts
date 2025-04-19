@@ -33,12 +33,24 @@ export class ScheduleExplorer implements OnModuleInit {
     if (!metadataExtracted.length) this.logger.log("No schedule found");
 
     for (const metadata of metadataExtracted) {
-      await this.scheduleService.schedule(metadata.expression, {
-        name: metadata.methodName,
-        queueName: metadata.queueName,
-      });
+      try {
+        await this.scheduleService.schedule(metadata.expression, {
+          name: metadata.methodName,
+          queueName: metadata.queueName,
+        });
 
-      await this.scheduleService.process(metadata);
+        await this.scheduleService.process(metadata);
+
+        this.logger.debug(
+          `Scheduled and processed job: ${metadata.queueName}.${metadata.methodName}`,
+        );
+      } catch (error) {
+        this.logger.error(
+          `Failed to schedule/process job ${metadata.queueName}.${metadata.methodName}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      }
     }
   }
 }
