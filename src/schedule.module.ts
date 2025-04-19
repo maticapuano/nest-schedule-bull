@@ -9,7 +9,6 @@ import {
   ScheduleBullModuleOptions,
   ScheduleBullModuleAsyncOptions,
 } from "./interfaces/module-options";
-
 @Module({
   imports: [DiscoveryModule],
   providers: [MetadataAccessor, ScheduleService, MetadataExtractor],

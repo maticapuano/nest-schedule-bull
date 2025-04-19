@@ -1,3 +1,5 @@
+import { Timezone } from "@/enums/timezone";
+
 export interface CronOptions {
   /**
    * The name of the job to add this job to.
@@ -9,5 +11,5 @@ export interface CronOptions {
    * The time zone to use for the cron expression.
    * If `timeZone` is not set, the cron expression will be evaluated in the local time zone.
    */
-  timezone?: string;
+  timezone?: Timezone | string;
 }

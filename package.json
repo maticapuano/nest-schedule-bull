@@ -1,6 +1,6 @@
 {
   "name": "nest-schedule-bull",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "main": "dist/index.js",
   "repository": {
     "type": "git",
