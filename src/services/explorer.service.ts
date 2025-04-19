@@ -37,6 +37,7 @@ export class ScheduleExplorer implements OnModuleInit {
         await this.scheduleService.schedule(metadata.expression, {
           name: metadata.methodName,
           queueName: metadata.queueName,
+          timezone: metadata.options.timezone,
         });
 
         await this.scheduleService.process(metadata);

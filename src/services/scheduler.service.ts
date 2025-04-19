@@ -2,6 +2,7 @@ import { CRON_MODULE_REDIS_OPTIONS } from "@/constants/metadata";
 import { ExtractedMetadata } from "@/interfaces/metadata-extractor";
 import { ScheduleBullModuleOptions } from "@/interfaces/module-options";
 import { ScheduleOptions } from "@/interfaces/schedule-options";
+import { parseQueueName } from "@/utils/parse-queue-name";
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { ConnectionOptions, Job, Queue, Worker, WorkerOptions } from "bullmq";
 
@@ -10,16 +11,16 @@ export class ScheduleService {
   private logger = new Logger(ScheduleService.name);
 
   public constructor(
-    @Inject(CRON_MODULE_REDIS_OPTIONS) private redisOptions: ScheduleBullModuleOptions,
+    @Inject(CRON_MODULE_REDIS_OPTIONS)
+    private scheduleBullModuleOptions: ScheduleBullModuleOptions,
   ) {}
 
   public async schedule(expression: string, options: ScheduleOptions): Promise<void> {
-    const queueName = this.redisOptions.connection
-      ? `${this.redisOptions.queueName}-${options.queueName}`
-      : options.queueName;
+    const defaultQueuePrefix = this.scheduleBullModuleOptions.queueName ?? "schedule";
+    const fullQueueName = parseQueueName(`${defaultQueuePrefix}.${options.queueName}`);
 
-    const queue = new Queue(queueName, {
-      connection: this.redisOptions.connection as ConnectionOptions,
+    const queue = new Queue(fullQueueName, {
+      connection: this.scheduleBullModuleOptions.connection as ConnectionOptions,
       defaultJobOptions: {},
     });
 
@@ -27,6 +28,7 @@ export class ScheduleService {
 
     await Promise.all(repeatableJobs.map(job => queue.removeJobScheduler(job.key)));
 
+    console.log(options);
     await queue.add(options.name, undefined, {
       repeat: {
         pattern: expression,
@@ -35,14 +37,16 @@ export class ScheduleService {
       removeOnComplete: true,
     });
 
-    this.logger.log(`Job scheduled: ${options.queueName}.${options.name}`);
+    this.logger.log(`Job scheduled: ${fullQueueName}.${options.name}`);
   }
 
   public async process(metadata: ExtractedMetadata): Promise<void> {
-    const { queueName, hooks, callback } = metadata;
+    const { queueName: metadataQueueName, hooks, callback } = metadata;
+    const defaultQueuePrefix = this.scheduleBullModuleOptions.queueName ?? "schedule";
+    const fullQueueName = parseQueueName(`${defaultQueuePrefix}.${metadataQueueName}`);
 
     const options: WorkerOptions = {
-      connection: this.redisOptions.connection as ConnectionOptions,
+      connection: this.scheduleBullModuleOptions.connection as ConnectionOptions,
       removeOnComplete: {
         count: 1,
       },
@@ -50,7 +54,7 @@ export class ScheduleService {
 
     const workerProcess = async (job: Job): Promise<void> => callback(job);
 
-    const worker = new Worker(queueName, workerProcess, options);
+    const worker = new Worker(fullQueueName, workerProcess, options);
 
     for (const { event, callback } of hooks) {
       worker.on(event, async (job: Job, ...args: unknown[]) => {

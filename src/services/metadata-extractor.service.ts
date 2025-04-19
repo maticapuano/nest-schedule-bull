@@ -46,7 +46,7 @@ export class MetadataExtractor {
         options,
         methodName,
         className: instanceWrapper.name,
-        queueName: parseQueueName(options.queueName || instanceWrapper.name),
+        queueName: parseQueueName(options.name || instanceWrapper.name),
         hooks: eventHookMetadata,
         callback: callback.bind(instance),
       });

@@ -21,8 +21,8 @@ export function Cron(expression: string, options?: CronOptions): MethodDecorator
     throw new InvalidExpression(expression);
   }
 
-  if (options && options.timeZone && !isValidTimezone(options.timeZone)) {
-    throw new InvalidTimeZone(options.timeZone);
+  if (options && options.timezone && !isValidTimezone(options.timezone)) {
+    throw new InvalidTimeZone(options.timezone);
   }
 
   return applyDecorators(
